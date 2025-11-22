@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>-</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for a soft, dreamy background and refined animations */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Soft, ethereal background gradient */
+            background: radial-gradient(circle at 50% 50%, #fff0f5 0%, #ffe4e6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 1000px; /* Enable 3D perspective for child elements */
+        }
+
+        /* --- Main Message Card Styling --- */
+        .message-card {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 15px 45px rgba(255, 99, 132, 0.5);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s ease-in-out;
+            cursor: pointer;
+            position: relative;
+            z-index: 20;
+            will-change: transform, box-shadow; /* Optimization hint */
+        }
+        .message-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 20px 60px rgba(255, 99, 132, 0.8);
+        }
+
+        /* --- Text Glow Animation --- */
+        .text-glow {
+            color: #ff1493;
+            text-shadow: 0 0 8px rgba(255, 105, 180, 0.8), 0 0 15px rgba(255, 20, 147, 0.6);
+            animation: pulse-glow 3s infinite alternate ease-in-out;
+            will-change: text-shadow, opacity;
+        }
+        @keyframes pulse-glow {
+            from {
+                text-shadow: 0 0 6px rgba(255, 105, 180, 0.8), 0 0 10px rgba(255, 20, 147, 0.5);
+                opacity: 0.95;
+            }
+            to {
+                text-shadow: 0 0 12px rgba(255, 105, 180, 1), 0 0 20px rgba(255, 20, 147, 0.7);
+                opacity: 1;
+            }
+        }
+        
+        /* --- Click Particle Burst (Advanced 3D Animation) --- */
+        .love-particle {
+            position: absolute;
+            pointer-events: none;
+            color: #e91e63;
+            animation: burst-flight 3.5s cubic-bezier(0.2, 0.8, 0.6, 1) forwards;
+            z-index: 30;
+            will-change: transform, opacity;
+        }
+        @keyframes burst-flight {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                /* These values will be overridden by JS for a dynamic trajectory */
+                transform: translate(var(--end-x), var(--end-y)) rotate(var(--end-rot)) scale(0.1);
+                opacity: 0;
+            }
+        }
+
+        /* --- Subtle Background Sparkles (Continuous Animation) --- */
+        .subtle-sparkle {
+            position: fixed;
+            color: #ffb6c1;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            animation: slow-drift 20s linear infinite;
+            will-change: transform, opacity;
+        }
+        @keyframes slow-drift {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg); /* Change to -100vh to drift up */
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div id="love-container" class="message-card w-full max-w-lg mx-auto p-10 md:p-16 rounded-[40px] text-center">
+        <!-- Main Content -->
+        <div class="space-y-8">
+            <p class="text-2xl md:text-3xl text-gray-700 font-serif italic">
+                To Senuri,
+            </p>
+            <h1 class="text-6xl md:text-8xl font-black tracking-tighter text-[#e91e63] uppercase text-glow">
+                I Love You
+            </h1>
+            <p class="text-3xl md:text-4xl font-light text-pink-700">
+                You are my greatest adventure.
+                <span class="inline-block animate-pulse text-4xl">✨</span>
+            </p>
+            <p class="text-lg text-gray-500 pt-4">
+                (Tap the card for a thousand kisses! 💋) <br>
+                This Develop By Thineth Bandara
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Use a modern class structure for encapsulation and better organization
+        class LoveMessageApp {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.emojis = ['💖', '💕', '💘', '❤️', '💋', '✨'];
+                this.lastSparkleTime = 0;
+                this.sparkleInterval = 500; // Average interval for background generation
+
+                if (this.container) {
+                    this.init();
+                } else {
+                    console.error('Container element not found. Check ID.');
+                }
+            }
+
+            init() {
+                // Attach event listener to handle the click/tap burst
+                this.container.addEventListener('click', this.handleCardClick.bind(this));
+
+                // Start the background animation loop using requestAnimationFrame
+                window.onload = () => this.startBackgroundAnimation();
+            }
+
+            // --- Click Particle Burst Logic ---
+            createParticle(emoji, startX, startY) {
+                const particle = document.createElement('div');
+                particle.classList.add('love-particle');
+                particle.innerHTML = emoji;
+
+                // Set initial position relative to the container
+                particle.style.left = `${startX}px`;
+                particle.style.top = `${startY}px`;
+
+                // Calculate random destination and rotation for the CSS variable
+                const maxRange = 250;
+                const endX = (Math.random() - 0.5) * maxRange * 2; // -250 to 250
+                const endY = -200 - Math.random() * maxRange;       // -200 to -450 (mostly up)
+                const endRot = (Math.random() - 0.5) * 720;        // -360deg to 360deg
+
+                // Use CSS variables for dynamic animation
+                particle.style.setProperty('--end-x', `${endX}px`);
+                particle.style.setProperty('--end-y', `${endY}px`);
+                particle.style.setProperty('--end-rot', `${endRot}deg`);
+
+                const size = Math.random() * 1.5 + 1.5;
+                const duration = Math.random() * 1.0 + 3.0; // 3.0s to 4.0s
+                
+                particle.style.fontSize = `${size}rem`;
+                particle.style.animationDuration = `${duration}s`;
+
+                this.container.appendChild(particle);
+
+                // Remove particle after animation to keep the DOM clean
+                setTimeout(() => particle.remove(), duration * 1000);
+            }
+
+            handleCardClick(event) {
+                const rect = this.container.getBoundingClientRect();
+                // Calculate click position relative to the card
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+
+                for (let i = 0; i < 20; i++) {
+                    const emoji = this.emojis[Math.floor(Math.random() * this.emojis.length)];
+                    this.createParticle(emoji, clickX, clickY);
+                }
+            }
+
+            // --- Background Animation (requestAnimationFrame loop) ---
+            createBackgroundSparkle() {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('subtle-sparkle');
+                sparkle.innerHTML = '🤍'; 
+
+                // Start from the bottom of the viewport
+                sparkle.style.left = `${Math.random() * 100}vw`;
+                sparkle.style.bottom = `0`; 
+                
+                const size = Math.random() * 0.5 + 0.5;
+                const duration = Math.random() * 10 + 15; 
+
+                sparkle.style.fontSize = `${size}rem`;
+                sparkle.style.animationDuration = `${duration}s`;
+                sparkle.style.animationDelay = `-${Math.random() * duration}s`;
+                
+                document.body.appendChild(sparkle);
+
+                // Clean up element
+                setTimeout(() => sparkle.remove(), duration * 1000);
+            }
+
+            startBackgroundAnimation(timestamp) {
+                // Generate a sparkle if enough time has passed since the last one
+                if (timestamp - this.lastSparkleTime > this.sparkleInterval) {
+                    this.createBackgroundSparkle();
+                    this.lastSparkleTime = timestamp;
+                    // Randomize next interval slightly for natural look
+                    this.sparkleInterval = 400 + Math.random() * 200; 
+                }
+                
+                // Recursively call requestAnimationFrame for a smooth loop
+                requestAnimationFrame(this.startBackgroundAnimation.bind(this));
+            }
+        }
+
+        // Initialize the application once the DOM is ready
+        window.onload = function() {
+            new LoveMessageApp('love-container');
+        };
+    </script>
+</body>
+</html>
